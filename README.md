@@ -11,7 +11,10 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 * LaunchDarkly account
 * Node >=16.8.x
 * NextJS >=13.x
-  
+
+> Note: If you get a Server 500 error while running the app as discussed here: [vercel/next.js#49677](https://github.com/vercel/next.js/issues/49677), switch to Node v16.8.
+
+
 ### Setup
 1. Create a feature flag in LaunchDarkly.
 
