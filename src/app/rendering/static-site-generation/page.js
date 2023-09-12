@@ -28,7 +28,7 @@ export default async function page() {
     blogPosts.length == 1 ? styles.center : (styles.center, styles.grid);
   return (
     <>
-      <h1 className={styles.center}>App Router: Server Side Rendering </h1>
+      <h1 className={styles.center}>App Router: Static Generation </h1>
 
       <main className={styles.main}>
         <div className={customStyles}>

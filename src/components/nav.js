@@ -1,26 +1,33 @@
 import Link from "next/link";
 
+const linksData = [
+  { href: "/", text: "Home" },
+  {
+    href: "/rendering/withldprovider",
+    text: "withLdProvider",
+  },
+  { href: "/rendering/asyncldprovider", text: "AsyncLDProvider" },
+  { href: "/rendering/server-side-rendering", text: "Server Rendering" },
+  { href: "/rendering/static-site-generation", text: "Static Generation" },
+];
+
+const NavLinks = function () {
+  return linksData.map((link) => {
+    return (
+      <li>
+        <Link key='{link.text}' href={link.href}>
+          {link.text}
+        </Link>
+      </li>
+    );
+  });
+};
+
 export default function Nav() {
   return (
     <div className='nav'>
       <ul>
-        <li>
-          <Link href='/'>Home</Link>
-        </li>
-
-        <li>
-          <Link href='/rendering/static-rendering'>Static Rendering</Link>
-        </li>
-        <li>
-          <Link href='/rendering/server-side-rendering'>
-            Server Side Rendering
-          </Link>
-        </li>
-        <li>
-          <Link href='/rendering/static-site-generation'>
-            Static Site Generation
-          </Link>
-        </li>
+        <NavLinks />
       </ul>
     </div>
   );

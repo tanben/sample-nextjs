@@ -11,10 +11,10 @@
   "dependencies": {
     "eslint": "8.42.0",
     "eslint-config-next": "13.4.4",
-    "launchdarkly-node-server-sdk": "^7.0.1",
-    "launchdarkly-react-client-sdk": "^3.0.6",
-    "next": "13.4.4",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "launchdarkly-node-server-sdk": "^7.0.3",
+    "launchdarkly-react-client-sdk": "^3.0.9",
+    "next": "^13.4.19",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
