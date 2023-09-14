@@ -7,6 +7,7 @@ const linksData = [
     text: "withLdProvider",
   },
   { href: "/rendering/asyncldprovider", text: "AsyncLDProvider" },
+  { href: "/rendering/ldprovider", text: "ldProvider" },
   { href: "/rendering/server-side-rendering", text: "Server Rendering" },
   { href: "/rendering/static-site-generation", text: "Static Generation" },
 ];

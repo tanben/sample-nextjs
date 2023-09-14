@@ -6,17 +6,21 @@ function Content(props) {
 }
 
 const defaultContext = {
+  kind: "user",
+  key: "user-key-123abc",
+  name: "Sandy Smith",
+};
+
+const config = {
   clientSideID: "",
-  context: {
-    kind: "user",
-    anonymous: true,
-  },
+  context: {},
   options: {},
 };
 
 function WithLDProviderContent({ id, children, context = defaultContext }) {
-  context.clientSideID = id;
-  const Provider = withLDProvider(context)(Content);
+  config.clientSideID = id;
+  config.context = context;
+  const Provider = withLDProvider(config)(Content);
   return <Provider>{children}</Provider>;
 }
 
