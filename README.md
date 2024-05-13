@@ -1,6 +1,6 @@
 # LaunchDarkly Next.js App Router Demo
 
-This is a sample LaunchDarkly implementation on Next.js v13 using the App Router with Client and Server components and various rendering strategies. It demonstrates how to integrate LaunchDarkly feature flags into a Next.js application.
+This is a sample LaunchDarkly implementation on Next.js using the App Router with Client and Server components and various rendering strategies. It demonstrates how to integrate LaunchDarkly feature flags into a Next.js application.
 
 
 
@@ -11,7 +11,11 @@ This is a sample LaunchDarkly implementation on Next.js v13 using the App Router
 ### Challenges and Solutions
 
 
-When working with client components in Next.js, it's important to understand how Next.js handles client-side prerendering and its implications on browser-specific libraries like the LaunchDarkly React web SDK. Next.js improves page load times by prerendering both Client and Server components on the server and sending prerendered HTML to the browser. This makes page load times faster, especially for pages with lots of content and complex JavaScript. During server-side prerendering, Client components do not involve hydration, which can cause runtime errors when browser-specific APIs are used such as when calling LaunchDarkly React SDK `asyncWithLDProvider`.
+If you're developing with client components in Next.js, it's crucial to have a good grasp of how the platform manages client-side prerendering and the impact it may have on browser-specific libraries such as the LaunchDarkly React web SDK. For more information on this topic, I suggest checking out this article titled ["Why do Client Components get SSR'd to HTML?"](https://github.com/reactwg/server-components/discussions/4).
+
+
+Next.js improves page load times by prerendering **both Client and Server components** on the server and sending prerendered HTML to the browser.  This makes page load times faster, especially for pages with lots of content and complex JavaScript.
+ During server-side prerendering, Client components do not involve hydration, which can cause runtime errors when browser-specific APIs are used such as when calling LaunchDarkly React SDK `asyncWithLDProvider`.
 
 To avoid this, consider implementing the following:
 
@@ -22,7 +26,7 @@ To avoid this, consider implementing the following:
 
 Here is an example of how to incorporate these modifications:
 
-> Client component: `components/AsyncWithLDProvider.js`
+ Client component: `components/AsyncWithLDProvider.js`
 ```
 'use client';
 
@@ -49,7 +53,7 @@ export default function AsyncLDProvider({ children }) {
 }
 ```
 
-then use in  `app/layout.js`:
+then call it in  `app/layout.js`:
 
 ```
 import dynamic from "next/dynamic";
@@ -89,7 +93,7 @@ export default function RootLayout({ children }) {
 ## Prerequisites
 - LaunchDarkly account
 - Node.js version >= 16.8.x
-- Next.js version 13.x
+- Next.js version 14.x
   
 >This [Next.js](https://nextjs.org/) project was bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
@@ -133,6 +137,7 @@ For more information check out the following resources:
 - [LaunchDarkly Quick Start Guide](https://docs.launchdarkly.com/home/getting-started) - describes how to get started with LaunchDarkly
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  
 
 
 
