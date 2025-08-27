@@ -15,8 +15,8 @@ const linksData = [
 const NavLinks = function () {
   return linksData.map((link) => {
     return (
-      <li>
-        <Link key='{link.text}' href={link.href}>
+      <li key={`li-${link.text}`}>
+        <Link key={`link-${link.text}`} href={link.href}>
           {link.text}
         </Link>
       </li>

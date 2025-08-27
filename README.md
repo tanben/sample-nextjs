@@ -8,7 +8,7 @@ This is a sample LaunchDarkly implementation on Next.js using the App Router wit
 
 
 ##  Integrating LaunchDarkly React SDK in Next.js
-### Challenges and Solutions
+### Challenges and Solutions (Updated for Next.js 15 & React 19)
 
 
 If you're developing with client components in Next.js, it's crucial to have a good grasp of how the platform manages client-side prerendering and the impact it may have on browser-specific libraries such as the LaunchDarkly React web SDK. For more information on this topic, I suggest checking out this article titled ["Why do Client Components get SSR'd to HTML?"](https://github.com/reactwg/server-components/discussions/4).
@@ -17,83 +17,148 @@ If you're developing with client components in Next.js, it's crucial to have a g
 Next.js improves page load times by prerendering **both Client and Server components** on the server and sending prerendered HTML to the browser.  This makes page load times faster, especially for pages with lots of content and complex JavaScript.
  During server-side prerendering, Client components do not involve hydration, which can cause runtime errors when browser-specific APIs are used such as when calling LaunchDarkly React SDK `asyncWithLDProvider`.
 
-To avoid this, consider implementing the following:
+**Important Changes in Next.js 15 & React 19:**
+- The `use()` hook now requires **stable/cached promises** and cannot be used with promises created during render. 
+- Server Components cannot use `ssr: false` with `next/dynamic`. Read [Invalid Usage of `suspense` Option of `next/dynamic`](https://nextjs.org/docs/messages/invalid-dynamic-suspense) for details.
+- New error: "A component was suspended by an uncached promise"
 
-1. Initialize the LaunchDarkly React SDK in a Client component.
+To avoid these issues, consider implementing the following **updated approach**:
+
+1. Initialize the LaunchDarkly React SDK in a Client component using traditional async patterns.
 2. Use code-splitting to defer the loading of the React web SDK until page hydration phase.
-3. Call the [use() hook](https://github.com/acdlite/rfcs/blob/first-class-promises/text/0000-first-class-support-for-promises.md#usepromise) to enable async calls in the Client component. Read the[ React RFC](https://github.com/acdlite/rfcs/blob/first-class-promises/text/0000-first-class-support-for-promises.md#why-cant-client-components-be-async-functions) *why Client components can't be async functions.*
-4. When loading the asyncWithLDProvider component, call `dynamic()` and set the `ssr` option to `false` to disable server-side rendering.
+3. **Avoid using `use()` hook with promises created in render** - use `useEffect` and `useState` instead for compatibility. Read  [React v19 use() does not support promises created in render](https://react.dev/blog/2024/12/05/react-19#use-does-not-support-promises-created-in-render) for details.
+4. When using `dynamic()` with `ssr: false`, ensure the component calling it is a **Client Component** (has `"use client"` directive).  Read [Skipping SSR](https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr) for details.
 
 Here is an example of how to incorporate these modifications:
 
  Client component: `components/AsyncWithLDProvider.js`
 ```
-'use client';
+"use client";
 
-import { use} from "react";
-import { asyncWithLDProvider } from "launchdarkly-react-client-sdk";
+import { useEffect, useState } from "react";
+import { asyncWithLDProvider, basicLogger } from "launchdarkly-react-client-sdk";
 
-export default function AsyncLDProvider({ children }) {
- 
-  //  1. Call use() hook,
-  //  2. Initialize LaunchDarkly SDK as usual
+const defaultContext = {
+  kind: "user",
+  key: "user-key-123abc",
+  name: "Sandy Smith",
+};
 
-  const LDDynaProvider = use(
-    asyncWithLDProvider({
-      clientSideID: "<client side ID> ",
-      context: {
-        kind: "user",
-        key: "user-key-123abc",
-        name: "Sandy Smith",
-        email: "sandy@example.com",
-      },
-    })
-  );
-  return <LDDynaProvider>{children}</LDDynaProvider>;
+const createLDConfig = (clientSideID, context) => ({
+  clientSideID,
+  context,
+  timeout: 5,
+  options: {
+    logger: basicLogger({
+      destination: (line) => console.log(line),
+      level: "debug",
+    }),
+  },
+  reactOptions: {
+    useCamelCaseFlagKeys: true,
+  },
+});
+
+export default function AsyncLDProvider({
+  children,
+  context = defaultContext,
+  clientSideID,
+}) {
+  const [LDProvider, setLDProvider] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!clientSideID) {
+      setError(new Error("clientSideID is required"));
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+
+    const initializeLDProvider = async () => {
+      try {
+        const config = createLDConfig(clientSideID, context);
+        const provider = await asyncWithLDProvider(config);
+        
+        if (mounted) {
+          setLDProvider(() => provider);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err);
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeLDProvider();
+
+    return () => {
+      mounted = false;
+    };
+  }, [clientSideID, context]);
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (loading || !LDProvider) {
+    return <div>Loading LaunchDarkly...</div>;
+  }
+
+  return <LDProvider>{children}</LDProvider>;
 }
 ```
 
-then call it in  `app/layout.js`:
-
+create a client wrapper component : `components/ClientAsyncLDProvider.js`:
 ```
+"use client";
+
 import dynamic from "next/dynamic";
-import { Suspense } from "react";
 
-// 1. Disable SSR
-// 2. Defer loading the Client component
-
-const AsyncLDProvider = dynamic(
+const LDAsyncPovider = dynamic(
   () => import("@/components/AsyncWithLDProvider"),
   {
     ssr: false,
+    loading: () => <div>Loading LaunchDarkly...</div>
   }
 );
 
-export const metadata = {
-  title: "LaunchDarkly Demo",
-  description: "Generated by create next app",
-};
-
-export default function RootLayout({ children }) {
+export default function ClientAsyncLDProvider({ children, clientSideID }) {
   return (
-    <html lang='en'>
-      <body>
-        <Suspense>
-          
-          <AsyncLDProvider> {children} </AsyncLDProvider>
-
-        </Suspense>
-      </body>
-    </html>
+    <LDAsyncPovider clientSideID={clientSideID}>
+      {children}
+    </LDAsyncPovider>
   );
 }
 ```
+
+Then use it in `app/layout.js` (Server Component):
+```
+import ClientAsyncLDProvider from "@/components/ClientAsyncLDProvider";
+
+export default function Layout({ children }) {
+  return (
+    <ClientAsyncLDProvider clientSideID={process.env.CLIENT_SIDE_ID}>
+      {children}
+    </ClientAsyncLDProvider>
+  );
+}
+
+```
+
 
 
 ## Prerequisites
 - LaunchDarkly account
-- Node.js version >= 16.8.x
-- Next.js version 14.x
+- LaunchDarkly React Web client SDK >= 3.8.x
+- LaunchDarkly Node.js server SDK >= 9.10.x
+- Node.js version >= 18.17.x
+- Next.js version 15.x
+- React version 19.x
   
 >This [Next.js](https://nextjs.org/) project was bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 

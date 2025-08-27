@@ -1,11 +1,17 @@
-import LaunchDarkly from "launchdarkly-node-server-sdk";
+import { init, BasicLogger } from '@launchdarkly/node-server-sdk';
 
 async function initialize() {
   const SDK_KEY = process.env.LAUNCHDARKLY_SDK_KEY;
   // console.log(`--- ld-server.js initialize SDK=${SDK_KEY} ---`);
 
-  const client = LaunchDarkly.init(SDK_KEY);
-  globalThis.LaunchDarklyServerClient = await client.waitForInitialization();
+  const options = {
+    logger: new BasicLogger({
+      destination: console.log,
+      level: "debug",
+    }),
+  };
+  const client = init(SDK_KEY, options);
+  globalThis.LaunchDarklyServerClient = await client.waitForInitialization({timeout: 5});
 
   return globalThis.LaunchDarklyServerClient;
 }
@@ -19,4 +25,8 @@ async function getVariation(flagKey, context, defaultValue) {
   const ldClient = await getClient();
   return ldClient.variation(flagKey, context, defaultValue);
 }
-export default { getClient, getVariation };
+async function getAllFlags(context) {
+  const ldClient = await getClient();
+  return ldClient.allFlagsState(context);
+}
+export default { getClient, getVariation, getAllFlags };

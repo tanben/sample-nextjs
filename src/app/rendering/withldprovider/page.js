@@ -1,22 +1,19 @@
-import styles from "../../page.module.css";
+import LogoGrid from "@/components/LogoGrid";
 
 import WithLDProviderContent from "@/components/WithLDProvider";
-import LogoClientComponent from "@/components/LogoClientComponent";
-import LogoHybridComponent from "@/components/LogoHybridComponent";
-import LogoServerComponent from "@/components/LogoServerComponent";
 import LDSDK from "@/lib/ldServer";
 
-import React, { Suspense } from "react";
 const defaultContext = {
   kind: "server-context",
   key: "nextjs-app-component",
 };
 
-const Loading = () => <h1 className={styles.center}>Loading...</h1>;
 
 export default async function page() {
+  const serverSideKey = "simple-toggle";
+  const clientSideKey = "simpleToggle";
   const bootstrapValue = await LDSDK.getVariation(
-    "simple-toggle",
+    serverSideKey,
     defaultContext,
     false
   );
@@ -25,54 +22,21 @@ export default async function page() {
     defaultSrc: "/next.svg",
     srcTrue: "/launchdarkly.svg",
   };
+  console.log("withldprovider process.env.CLIENT_SIDE_ID", process.env.CLIENT_SIDE_ID);
+  console.log("withldprovider bootstrapValue", bootstrapValue);
 
   return (
-    <>
-      <h1 className={styles.center}>
-        App Router: Server Rendering + Client hydration
-      </h1>
-      <h2 className={styles.center}>withLDProvider example</h2>
-      <main className={styles.main}>
-        <div className={styles.grid}>
-          <WithLDProviderContent id={process.env.CLIENT_SIDE_ID}>
-            <Suspense fallback={<Loading />}>
-              <div className={styles.card}>
-                <LogoClientComponent
-                  flagKey='simpleToggle'
-                  {...defaultLogoProps}
-                />
 
-                <div className={styles.description}>
-                  <p>Client Component</p>
-                </div>
-              </div>
-            </Suspense>
-            <Suspense fallback={<Loading />}>
-              <div className={styles.card}>
-                <LogoHybridComponent
-                  defaultValue={bootstrapValue}
-                  flagKey='simpleToggle'
-                  {...defaultLogoProps}
-                />
+    <LogoGrid
+      title="withLDProvider example"
+      bootstrapValue={bootstrapValue}
+      serverSideKey={serverSideKey}
+      clientSideKey={clientSideKey}
+      defaultLogoProps={defaultLogoProps}
 
-                <div className={styles.description}>
-                  <p>Hybrid Component</p>
-                  <p>Client Component w/ Server Bootstraped</p>
-                </div>
-              </div>
-            </Suspense>
-          </WithLDProviderContent>
-          <div className={styles.card}>
-            <LogoServerComponent
-              flagKey='simple-toggle'
-              {...defaultLogoProps}
-            />
-            <div className={styles.description}>
-              <p>Server component</p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </>
+      showSuspense={true}
+    >
+      <WithLDProviderContent id={process.env.CLIENT_SIDE_ID} />
+    </LogoGrid>
   );
 }

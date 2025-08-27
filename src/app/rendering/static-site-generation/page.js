@@ -17,12 +17,14 @@ const context = {
 };
 
 export default async function page() {
+  const key = "simple-toggle";
   const enableBlogPost = await LDSDK.getVariation(
-    "simple-toggle",
+    key,
     context,
     false
   );
-
+  const flags = await LDSDK.getAllFlags(context);
+  console.log("static-site-generation flags", flags);
   const blogPosts = await BlogPostHelper.getBlogPosts(enableBlogPost);
   const customStyles =
     blogPosts.length == 1 ? styles.center : (styles.center, styles.grid);
@@ -35,7 +37,7 @@ export default async function page() {
           <Suspense fallback={"Loading..."}>
             {blogPosts.map(({ author, title, image }) => {
               return (
-                <BlogEntryCard title={title} image={image} author={author} />
+                <BlogEntryCard key={`blog-entry-${title}`} title={title} image={image} author={author} />
               );
             })}
           </Suspense>

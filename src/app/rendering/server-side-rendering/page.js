@@ -45,7 +45,7 @@ export default async function page() {
           <Suspense fallback={"Loading..."}>
             {blogPosts.map(({ author, title, image }) => {
               return (
-                <BlogEntryCard title={title} image={image} author={author} />
+                <BlogEntryCard key={`blog-entry-${title}`} title={title} image={image} author={author} />
               );
             })}
           </Suspense>

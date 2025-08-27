@@ -12,6 +12,9 @@ async function LogoServerComponent(props) {
   let flagValue = await LDSDK.getVariation(flagKey, serverContext, false);
   const src = flagValue ? srcTrue : defaultSrc;
 
+  const flags = await LDSDK.getAllFlags(serverContext);
+  console.log("LogoServerComponent flags", flags);
+  console.log(`LogoServerComponent flagKey=${flagKey} flagValue=${flagValue}`);
   return (
     <Image
       className={"App-logo"}

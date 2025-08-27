@@ -1,19 +1,17 @@
-import styles from "../../page.module.css";
 
-import LogoClientComponent from "@/components/LogoClientComponent";
-import LogoHybridComponent from "@/components/LogoHybridComponent";
-import LogoServerComponent from "@/components/LogoServerComponent";
+import LogoGrid from "@/components/LogoGrid";
 import LDSDK from "@/lib/ldServer";
 
-import React, { Suspense } from "react";
 const defaultContext = {
   kind: "server-context",
   key: "nextjs-app-component",
 };
 
 export default async function page() {
+  const serverSideKey = "simple-toggle";
+  const clientSideKey = "simpleToggle";
   const bootstrapValue = await LDSDK.getVariation(
-    "simple-toggle",
+    serverSideKey,
     defaultContext,
     false
   );
@@ -23,51 +21,17 @@ export default async function page() {
     srcTrue: "/launchdarkly.svg",
   };
 
+  console.log("asyncldprovider bootstrapValue", bootstrapValue);
   return (
-    <>
-      <h1 className={styles.center}>
-        App Router: Server Rendering + Client hydration
-      </h1>
-      <h2 className={styles.center}>asyncLDProvider example</h2>
-      <main className={styles.main}>
-        <div className={styles.grid}>
-          <Suspense fallback={"Loading..."}>
-            <div className={styles.card}>
-              <LogoClientComponent
-                flagKey='simpleToggle'
-                {...defaultLogoProps}
-              />
+    <LogoGrid
 
-              <div className={styles.description}>
-                <p>Client Component</p>
-              </div>
-            </div>
-          </Suspense>
-          <Suspense fallback={"Loading..."}>
-            <div className={styles.card}>
-              <LogoHybridComponent
-                defaultValue={bootstrapValue}
-                flagKey='simpleToggle'
-                {...defaultLogoProps}
-              />
+      title="asyncLDProvider example"
+      bootstrapValue={bootstrapValue}
+      serverSideKey={serverSideKey}
 
-              <div className={styles.description}>
-                <p>Hybrid Component</p>
-                <p>Client Component w/ Server Bootstraped</p>
-              </div>
-            </div>
-          </Suspense>
-          <div className={styles.card}>
-            <LogoServerComponent
-              flagKey='simple-toggle'
-              {...defaultLogoProps}
+      clientSideKey={clientSideKey}
+      defaultLogoProps={defaultLogoProps}
+      showSuspense={false} // This one uses simple loading text
             />
-            <div className={styles.description}>
-              <p>Server component</p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </>
   );
 }
